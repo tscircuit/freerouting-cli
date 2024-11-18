@@ -62,7 +62,7 @@ const API_BASE = commonOptions.apiBaseUrl
 const getHeaders = (needsAuth = true) => {
   if (!commonOptions.profileId && needsAuth) {
     console.error(
-      'Profile ID is not set, use --profile-id, do "freerouting config:set-profile" or set FREEROUTING_PROFILE_ID environment variable',
+      'Profile ID is not set, use --profile-id, do "freerouting config set-profile" or set FREEROUTING_PROFILE_ID environment variable',
     )
     process.exit(1)
   }
@@ -73,8 +73,12 @@ const getHeaders = (needsAuth = true) => {
 }
 
 // Session commands
-program
-  .command("session:create")
+const sessionCommand = new Command("session")
+  .alias("sessions")
+  .description("Manage routing sessions")
+
+sessionCommand
+  .command("create")
   .description("Create a new routing session")
   .action(async () => {
     const response = await axios.post(`${API_BASE}/v1/sessions/create`, "", {
@@ -84,36 +88,8 @@ program
     console.log(response.data)
   })
 
-// Config commands
-program
-  .command("config:set-profile")
-  .description("Set the Freerouting Profile ID")
-  .argument("<profileId>", "Profile ID to set")
-  .action(async (profileId: string) => {
-    config.set("profileId", profileId)
-    console.log(`Profile ID set to: ${profileId}`)
-  })
-
-program
-  .command("config:set-api-url")
-  .description("Set the Freerouting API Base URL")
-  .argument("<apiBaseUrl>", "API Base URL to set")
-  .action(async (apiBaseUrl: string) => {
-    config.set("apiBaseUrl", apiBaseUrl)
-    console.log(`API Base URL set to: ${apiBaseUrl}`)
-  })
-
-program
-  .command("config:create-profile")
-  .description("Generate and set a new random UUID v4 as the Profile ID")
-  .action(async () => {
-    const profileId = randomUUID()
-    config.set("profileId", profileId)
-    console.log(`New Profile ID generated and set to: ${profileId}`)
-  })
-
-program
-  .command("session:list")
+sessionCommand
+  .command("list")
   .description("List all sessions")
   .action(async () => {
     const response = await axios.get(`${API_BASE}/v1/sessions/list`, {
@@ -122,8 +98,8 @@ program
     console.log(response.data)
   })
 
-program
-  .command("session:get [sessionId]")
+sessionCommand
+  .command("get [sessionId]")
   .description("Get session details")
   .action(async (sessionId: string) => {
     sessionId ??= config.get("lastSessionId")
@@ -139,9 +115,45 @@ program
     console.log(response.data)
   })
 
+// Config commands
+const configCommand = new Command("config").description(
+  "Manage configuration settings",
+)
+
+configCommand
+  .command("set-profile")
+  .description("Set the Freerouting Profile ID")
+  .argument("<profileId>", "Profile ID to set")
+  .action(async (profileId: string) => {
+    config.set("profileId", profileId)
+    console.log(`Profile ID set to: ${profileId}`)
+  })
+
+configCommand
+  .command("set-api-url")
+  .description("Set the Freerouting API Base URL")
+  .argument("<apiBaseUrl>", "API Base URL to set")
+  .action(async (apiBaseUrl: string) => {
+    config.set("apiBaseUrl", apiBaseUrl)
+    console.log(`API Base URL set to: ${apiBaseUrl}`)
+  })
+
+configCommand
+  .command("create-profile")
+  .description("Generate and set a new random UUID v4 as the Profile ID")
+  .action(async () => {
+    const profileId = randomUUID()
+    config.set("profileId", profileId)
+    console.log(`New Profile ID generated and set to: ${profileId}`)
+  })
+
 // Job commands
-program
-  .command("job:create")
+const jobCommand = new Command("job")
+  .alias("jobs")
+  .description("Manage routing jobs")
+
+jobCommand
+  .command("create")
   .description("Create a new routing job")
   .option(
     "-s, --session-id <sessionId>",
@@ -164,9 +176,10 @@ program
     console.log(response.data)
   })
 
-program
-  .command("job:list <sessionId>")
+jobCommand
+  .command("list")
   .description("List jobs for a session")
+  .argument("<sessionId>", "Session ID")
   .action(async (sessionId: string) => {
     sessionId ??= config.get("lastSessionId")
     const response = await axios.get(`${API_BASE}/v1/jobs/list/${sessionId}`, {
@@ -175,9 +188,10 @@ program
     console.log(response.data)
   })
 
-program
-  .command("job:get <jobId>")
+jobCommand
+  .command("get")
   .description("Get job details")
+  .argument("[jobId]", "Job ID")
   .action(async (jobId: string) => {
     jobId ??= config.get("lastJobId")
     const response = await axios.get(`${API_BASE}/v1/jobs/${jobId}`, {
@@ -186,8 +200,8 @@ program
     console.log(response.data)
   })
 
-program
-  .command("job:upload")
+jobCommand
+  .command("upload")
   .description("Upload design file for a job")
   .option("-j, --job-id <jobId>", "Job ID", config.get("lastJobId"))
   .requiredOption("-f, --file <file>", "Design file path")
@@ -209,9 +223,10 @@ program
     console.log(response.data)
   })
 
-program
-  .command("job:start [jobId]")
+jobCommand
+  .command("start")
   .description("Start a routing job")
+  .argument("[jobId]", "Job ID")
   .action(async (jobId: string) => {
     jobId ??= config.get("lastJobId")
     if (!jobId) {
@@ -224,9 +239,10 @@ program
     console.log(response.data)
   })
 
-program
-  .command("job:output [jobId]")
+jobCommand
+  .command("output")
   .description("Get job output")
+  .argument("[jobId]", "Job ID")
   .option("-o, --output <file>", "Output file path")
   .action(async (jobId: string, opts: any) => {
     jobId ??= config.get("lastJobId")
@@ -254,12 +270,23 @@ program
   })
 
 // System commands
-program
-  .command("system:status")
+const systemCommand = new Command("system").description(
+  "Manage system operations",
+)
+
+systemCommand
+  .command("status")
   .description("Get system status")
   .action(async () => {
     const response = await axios.get(`${API_BASE}/v1/system/status`)
     console.log(response.data)
   })
+
+// Add all command groups to the main program
+program
+  .addCommand(sessionCommand)
+  .addCommand(configCommand)
+  .addCommand(jobCommand)
+  .addCommand(systemCommand)
 
 program.parse(process.argv)

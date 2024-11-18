@@ -33,6 +33,7 @@
       },
       "style": {
         "noUselessElse": "off",
+        "noParameterAssign": "off",
         "noNonNullAssertion": "off",
         "useNumberNamespace": "off",
         "useFilenamingConvention": {

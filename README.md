@@ -11,19 +11,19 @@ npm install -g freerouting
 Before using the CLI, you need to configure your profile ID. The easiest way is to generate a new one:
 
 ```bash
-freerouting config:create-profile
+freerouting config create-profile
 ```
 
 Alternatively, you can set a specific UUID as your profile ID:
 
 ```bash
-freerouting config:set-profile <uuid>
+freerouting config set-profile <uuid>
 ```
 
 You can also optionally set a custom API base URL (defaults to https://api.freerouting.app):
 
 ```bash
-freerouting config:set-api-url <api-url>
+freerouting config set-api-url <api-url>
 ```
 
 ## Usage
@@ -40,49 +40,53 @@ The CLI follows a typical workflow for PCB autorouting:
 
 ```bash
 # Create a new session
-freerouting session:create
+freerouting session create
 
 # Create a new job in the session
-freerouting job:create --name "my-board"
+freerouting job create --name "my-board"
 
 # Upload your DSN file
-freerouting job:upload --file my-board.dsn
+freerouting job upload --file my-board.dsn
 
 # Start the routing process
-freerouting job:start
+freerouting job start
 
 # Get the routed output (saves to the same filename by default)
-freerouting job:output
+freerouting job output
 ```
 
 ### Available Commands
 
 #### Session Management
-- `session:create` - Create a new routing session
-- `session:list` - List all your sessions
-- `session:get [sessionId]` - Get details of a specific session
+
+- `session create` - Create a new routing session
+- `session list` - List all your sessions
+- `session get [sessionId]` - Get details of a specific session
 
 #### Job Management
-- `job:create` - Create a new routing job
+
+- `job create` - Create a new routing job
   - Options:
     - `-s, --session-id <sessionId>` - Session ID (uses last session by default)
     - `-n, --name <name>` - Job name (default: "untitled")
     - `-p, --priority <priority>` - Job priority (default: "NORMAL")
-- `job:list <sessionId>` - List all jobs in a session
-- `job:get <jobId>` - Get details of a specific job
-- `job:upload` - Upload a design file
+- `job list <sessionId>` - List all jobs in a session
+- `job get <jobId>` - Get details of a specific job
+- `job upload` - Upload a design file
   - Required: `-f, --file <file>` - Path to your DSN file
   - Optional: `-j, --job-id <jobId>` - Job ID (uses last job by default)
-- `job:start [jobId]` - Start the routing process
-- `job:output [jobId]` - Get the routed output
+- `job start [jobId]` - Start the routing process
+- `job output [jobId]` - Get the routed output
   - Optional: `-o, --output <file>` - Custom output file path
 
 #### System Commands
-- `system:status` - Check the API system status
+
+- `system status` - Check the API system status
 
 #### Configuration
-- `config:set-profile <profileId>` - Set your profile ID
-- `config:set-api-url <apiBaseUrl>` - Set custom API base URL
+
+- `config set-profile <profileId>` - Set your profile ID
+- `config set-api-url <apiBaseUrl>` - Set custom API base URL
 
 ## Acknowledgements
 
