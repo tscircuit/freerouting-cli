@@ -4,6 +4,7 @@ import axios from "redaxios"
 import { z } from "zod"
 import debug from "debug"
 import Conf from "conf"
+import { randomUUID } from "crypto"
 
 const handleApiError = (error: any) => {
   console.error("API Error:")
@@ -100,6 +101,15 @@ program
   .action(async (apiBaseUrl: string) => {
     config.set("apiBaseUrl", apiBaseUrl)
     console.log(`API Base URL set to: ${apiBaseUrl}`)
+  })
+
+program
+  .command("config:create-profile")
+  .description("Generate and set a new random UUID v4 as the Profile ID")
+  .action(async () => {
+    const profileId = randomUUID()
+    config.set("profileId", profileId)
+    console.log(`New Profile ID generated and set to: ${profileId}`)
   })
 
 program

@@ -8,10 +8,16 @@ npm install -g freerouting
 
 ## Initial Setup
 
-Before using the CLI, you need to configure your profile ID. This can be any UUID string:
+Before using the CLI, you need to configure your profile ID. The easiest way is to generate a new one:
 
 ```bash
-freerouting config:set-profile <any-uuid>
+freerouting config:create-profile
+```
+
+Alternatively, you can set a specific UUID as your profile ID:
+
+```bash
+freerouting config:set-profile <uuid>
 ```
 
 You can also optionally set a custom API base URL (defaults to https://api.freerouting.app):
