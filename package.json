@@ -1,0 +1,24 @@
+{
+  "name": "freerouting",
+  "type": "module",
+  "main": "./dist/cli.js",
+  "scripts": {
+    "build": "tsup-node ./cli.ts --format esm --sourcemap"
+  },
+  "bin": {
+    "freerouting": "./dist/cli.js"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/debug": "^4.1.12",
+    "tsup": "^8.3.5"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "debug": "^4.3.7",
+    "redaxios": "^0.5.1",
+    "zod": "^3.23.8"
+  }
+}
