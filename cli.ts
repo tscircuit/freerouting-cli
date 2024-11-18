@@ -5,6 +5,24 @@ import { z } from "zod"
 import debug from "debug"
 import Conf from 'conf'
 
+const handleApiError = (error: any) => {
+  console.error("API Error:")
+  console.log(error)
+  if (error.data) {
+    // The request was made and the server responded with a status code
+    console.error(`Status: ${error.status}`)
+    console.error("Response data:", error.data)
+  } else if (error.request) {
+    // The request was made but no response was received
+    console.error("No response received from server")
+    console.error(error.request)
+  } else {
+    // Something happened in setting up the request
+    console.error("Error:", error.message)
+  }
+  process.exit(1)
+}
+
 const log = debug("freerouting:cli")
 
 const config = new Conf({
@@ -12,11 +30,10 @@ const config = new Conf({
   defaults: {
     lastSessionId: '',
     lastJobId: '',
-    profileId: ''
+    profileId: '',
+    apiBaseUrl: "https://api.freerouting.app"
   }
 })
-
-const API_BASE = "https://api.freerouting.app"
 
 const program = new Command()
 
@@ -28,13 +45,22 @@ program
 // Common options
 const commonOptions = {
   profileId: program.opts().profileId || config.get('profileId') || process.env.FREEROUTING_PROFILE_ID,
-  host: program.opts().host || process.env.FREEROUTING_HOST || "tscircuit/0.0.1"
+  host: program.opts().host || process.env.FREEROUTING_HOST || "tscircuit/0.0.1",
+  apiBaseUrl: program.opts().apiBaseUrl || process.env.FREEROUTING_API_BASE_URL || config.get('apiBaseUrl')
 }
 
-const getHeaders = () => ({
-  "Freerouting-Profile-ID": commonOptions.profileId,
-  "Freerouting-Environment-Host": commonOptions.host
-})
+const API_BASE = commonOptions.apiBaseUrl
+
+const getHeaders = (needsAuth = true) => {
+  if (!commonOptions.profileId && needsAuth) {
+    console.error("Profile ID is not set, use --profile-id, do \"freerouting config:set-profile\" or set FREEROUTING_PROFILE_ID environment variable")
+    process.exit(1)
+  }
+  return {
+    "Freerouting-Profile-ID": commonOptions.profileId,
+    "Freerouting-Environment-Host": commonOptions.host
+  }
+}
 
 // Session commands
 program
@@ -53,9 +79,18 @@ program
   .command("config:set-profile")
   .description("Set the Freerouting Profile ID")
   .argument("<profileId>", "Profile ID to set")
-  .action(async (profileId) => {
+  .action(async (profileId: string) => {
     config.set('profileId', profileId)
     console.log(`Profile ID set to: ${profileId}`)
+  })
+
+program
+  .command("config:set-api-url")
+  .description("Set the Freerouting API Base URL")
+  .argument("<apiBaseUrl>", "API Base URL to set")
+  .action(async (apiBaseUrl: string) => {
+    config.set('apiBaseUrl', apiBaseUrl)
+    console.log(`API Base URL set to: ${apiBaseUrl}`)
   })
 
 program
@@ -69,9 +104,14 @@ program
   })
 
 program
-  .command("session:get <sessionId>")
+  .command("session:get [sessionId]")
   .description("Get session details")
   .action(async (sessionId) => {
+    sessionId ??= config.get('lastSessionId')
+    if (!sessionId) {
+      console.error("No session ID provided and no last session ID found in config")
+      return
+    }
     const response = await axios.get(`${API_BASE}/v1/sessions/${sessionId}`, {
       headers: getHeaders()
     })
@@ -89,7 +129,7 @@ program
     const response = await axios.post(
       `${API_BASE}/v1/jobs/enqueue`,
       {
-        session_id: opts.sessionId,
+        session_id: opts.sessionId ?? config.get('lastSessionId'),
         name: opts.name,
         priority: opts.priority
       },
@@ -153,18 +193,22 @@ program
   .description("Get job output")
   .option("-o, --output <file>", "Output file path")
   .action(async (jobId, opts) => {
-    const response = await axios.get(`${API_BASE}/v1/jobs/${jobId}/output`, {
-      headers: getHeaders()
-    })
-    
-    const outputPath = opts.output || response.data.filename
-    if (outputPath) {
-      // Decode base64 and write to file
-      const decodedData = Buffer.from(response.data.data, 'base64').toString()
-      await Bun.write(outputPath, decodedData)
-      console.log(`Output written to ${outputPath}`)
-    } else {
-      console.log(response.data)
+    try {
+      const response = await axios.get(`${API_BASE}/v1/jobs/${jobId}/output`, {
+        headers: getHeaders()
+      })
+      
+      const outputPath = opts.output || response.data.filename
+      if (outputPath) {
+        // Decode base64 and write to file
+        const decodedData = Buffer.from(response.data.data, 'base64').toString()
+        await Bun.write(outputPath, decodedData)
+        console.log(`Output written to ${outputPath}`)
+      } else {
+        console.log(response.data)
+      }
+    } catch (error) {
+      handleApiError(error)
     }
   })
 
@@ -177,4 +221,4 @@ program
     console.log(response.data)
   })
 
-program.parse()
+program.parse(process.argv)
