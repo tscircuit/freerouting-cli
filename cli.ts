@@ -3,8 +3,18 @@ import { Command } from "commander"
 import axios from "redaxios"
 import { z } from "zod"
 import debug from "debug"
+import Conf from 'conf'
 
 const log = debug("freerouting:cli")
+
+const config = new Conf({
+  projectName: 'freerouting-api-cli',
+  defaults: {
+    lastSessionId: '',
+    lastJobId: '',
+    profileId: ''
+  }
+})
 
 const API_BASE = "https://api.freerouting.app"
 
@@ -17,7 +27,7 @@ program
 
 // Common options
 const commonOptions = {
-  profileId: program.opts().profileId || process.env.FREEROUTING_PROFILE_ID,
+  profileId: program.opts().profileId || config.get('profileId') || process.env.FREEROUTING_PROFILE_ID,
   host: program.opts().host || process.env.FREEROUTING_HOST || "tscircuit/0.0.1"
 }
 
@@ -34,7 +44,18 @@ program
     const response = await axios.post(`${API_BASE}/v1/sessions/create`, "", {
       headers: getHeaders()
     })
+    config.set('lastSessionId', response.data.id)
     console.log(response.data)
+  })
+
+// Config commands
+program
+  .command("config:set-profile")
+  .description("Set the Freerouting Profile ID")
+  .argument("<profileId>", "Profile ID to set")
+  .action(async (profileId) => {
+    config.set('profileId', profileId)
+    console.log(`Profile ID set to: ${profileId}`)
   })
 
 program
@@ -61,7 +82,7 @@ program
 program
   .command("job:create")
   .description("Create a new routing job")
-  .requiredOption("-s, --session-id <sessionId>", "Session ID")
+  .option("-s, --session-id <sessionId>", "Session ID", config.get('lastSessionId'))
   .option("-n, --name <name>", "Job name", "untitled")
   .option("-p, --priority <priority>", "Job priority", "NORMAL")
   .action(async (opts) => {
@@ -100,7 +121,7 @@ program
 program
   .command("job:upload")
   .description("Upload design file for a job")
-  .requiredOption("-j, --job-id <jobId>", "Job ID")
+  .option("-j, --job-id <jobId>", "Job ID", config.get('lastJobId'))
   .requiredOption("-f, --file <file>", "Design file path")
   .action(async (opts) => {
     const fileData = await Bun.file(opts.file).text()
