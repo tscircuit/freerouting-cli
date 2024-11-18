@@ -106,7 +106,7 @@ program
 program
   .command("session:get [sessionId]")
   .description("Get session details")
-  .action(async (sessionId) => {
+  .action(async (sessionId: string) => {
     sessionId ??= config.get('lastSessionId')
     if (!sessionId) {
       console.error("No session ID provided and no last session ID found in config")
@@ -125,7 +125,7 @@ program
   .option("-s, --session-id <sessionId>", "Session ID", config.get('lastSessionId'))
   .option("-n, --name <name>", "Job name", "untitled")
   .option("-p, --priority <priority>", "Job priority", "NORMAL")
-  .action(async (opts) => {
+  .action(async (opts: any) => {
     const response = await axios.post(
       `${API_BASE}/v1/jobs/enqueue`,
       {
@@ -135,13 +135,15 @@ program
       },
       { headers: getHeaders() }
     )
+    config.set('lastJobId', response.data.id)
     console.log(response.data)
   })
 
 program
   .command("job:list <sessionId>")
   .description("List jobs for a session")
-  .action(async (sessionId) => {
+  .action(async (sessionId: string) => {
+    sessionId ??= config.get('lastSessionId')
     const response = await axios.get(`${API_BASE}/v1/jobs/list/${sessionId}`, {
       headers: getHeaders()
     })
@@ -151,7 +153,8 @@ program
 program
   .command("job:get <jobId>")
   .description("Get job details")
-  .action(async (jobId) => {
+  .action(async (jobId: string) => {
+    jobId ??= config.get('lastJobId')
     const response = await axios.get(`${API_BASE}/v1/jobs/${jobId}`, {
       headers: getHeaders()
     })
@@ -163,7 +166,12 @@ program
   .description("Upload design file for a job")
   .option("-j, --job-id <jobId>", "Job ID", config.get('lastJobId'))
   .requiredOption("-f, --file <file>", "Design file path")
-  .action(async (opts) => {
+  .action(async (opts: any) => {
+    opts.jobId ??= config.get('lastJobId')
+    if (!opts.jobId) {
+      console.error("No job ID provided and no last job ID found in config")
+      return
+    }
     const fileData = await Bun.file(opts.file).text()
     const response = await axios.post(
       `${API_BASE}/v1/jobs/${opts.jobId}/input`,
@@ -177,9 +185,14 @@ program
   })
 
 program
-  .command("job:start <jobId>")
+  .command("job:start [jobId]")
   .description("Start a routing job")
-  .action(async (jobId) => {
+  .action(async (jobId: string) => {
+    jobId ??= config.get('lastJobId')
+    if (!jobId) {
+      console.error("No job ID provided and no last job ID found in config")
+      return
+    }
     const response = await axios.put(
       `${API_BASE}/v1/jobs/${jobId}/start`,
       "",
@@ -189,10 +202,15 @@ program
   })
 
 program
-  .command("job:output <jobId>")
+  .command("job:output [jobId]")
   .description("Get job output")
   .option("-o, --output <file>", "Output file path")
-  .action(async (jobId, opts) => {
+  .action(async (jobId: string, opts: any) => {
+    jobId ??= config.get('lastJobId')
+    if (!jobId) {
+      console.error("No job ID provided and no last job ID found in config")
+      return
+    }
     try {
       const response = await axios.get(`${API_BASE}/v1/jobs/${jobId}/output`, {
         headers: getHeaders()
