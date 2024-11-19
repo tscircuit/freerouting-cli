@@ -309,8 +309,9 @@ systemCommand
 
 // Add all command groups to the main program
 // Server commands
-const serverCommand = new Command("server")
-  .description("Manage local freerouting server")
+const serverCommand = new Command("server").description(
+  "Manage local freerouting server",
+)
 
 serverCommand
   .command("start")
@@ -318,10 +319,12 @@ serverCommand
   .action(async () => {
     await checkDocker()
     try {
-      const { stdout } = await execAsync("docker run -d -p 37864:37864 ghcr.io/tscircuit/freerouting:master")
+      const { stdout } = await execAsync(
+        "docker run -d -p 37864:37864 ghcr.io/tscircuit/freerouting:master",
+      )
       const containerId = stdout.trim()
       console.log("Container started with ID:", containerId)
-      
+
       // Show logs from the container
       const { stdout: logs } = await execAsync(`docker logs ${containerId}`)
       console.log("\nContainer logs:")
