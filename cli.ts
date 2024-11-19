@@ -154,7 +154,11 @@ configCommand
   .argument("<apiBaseUrl>", "API Base URL to set")
   .action(async (apiBaseUrl: string) => {
     config.set("apiBaseUrl", apiBaseUrl)
+    config.set("lastSessionId", "")
+    config.set("lastJobId", "")
+    config.set("profileId", "")
     console.log(`API Base URL set to: ${apiBaseUrl}`)
+    console.log("Session, job and profile IDs have been reset")
   })
 
 configCommand
