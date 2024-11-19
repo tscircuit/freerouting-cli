@@ -5,6 +5,10 @@ import { z } from "zod"
 import debug from "debug"
 import Conf from "conf"
 import { randomUUID } from "crypto"
+import { exec } from "child_process"
+import { promisify } from "util"
+
+const execAsync = promisify(exec)
 
 const handleApiError = (error: any) => {
   console.error("API Error:")
@@ -35,6 +39,16 @@ const config = new Conf({
     apiBaseUrl: "https://api.freerouting.app",
   },
 })
+
+async function checkDocker() {
+  try {
+    await execAsync("docker --version")
+    return true
+  } catch (error) {
+    console.error("Docker is not installed. Please install Docker first.")
+    process.exit(1)
+  }
+}
 
 const program = new Command()
 
@@ -145,6 +159,17 @@ configCommand
     const profileId = randomUUID()
     config.set("profileId", profileId)
     console.log(`New Profile ID generated and set to: ${profileId}`)
+  })
+
+configCommand
+  .command("reset")
+  .description("Reset all configuration to defaults")
+  .action(async () => {
+    config.set("lastSessionId", "")
+    config.set("lastJobId", "")
+    config.set("profileId", "")
+    config.set("apiBaseUrl", "https://api.freerouting.app")
+    console.log("Configuration reset to defaults")
   })
 
 // Job commands
@@ -283,10 +308,34 @@ systemCommand
   })
 
 // Add all command groups to the main program
+// Server commands
+const serverCommand = new Command("server")
+  .description("Manage local freerouting server")
+
+serverCommand
+  .command("start")
+  .description("Start a local freerouting server")
+  .action(async () => {
+    await checkDocker()
+    try {
+      await execAsync("docker run -d -p 37864:37864 ghcr.io/tscircuit/freerouting:master")
+      config.set("apiBaseUrl", "http://localhost:37864")
+      config.set("profileId", "e9866fac-e7ae-4f9f-a616-24ec577aa461")
+      config.set("lastSessionId", "")
+      config.set("lastJobId", "")
+      console.log("Local freerouting server started on http://localhost:37864")
+      console.log("API URL and profile ID have been configured automatically")
+    } catch (error) {
+      console.error("Failed to start docker container:", error)
+      process.exit(1)
+    }
+  })
+
 program
   .addCommand(sessionCommand)
   .addCommand(configCommand)
   .addCommand(jobCommand)
   .addCommand(systemCommand)
+  .addCommand(serverCommand)
 
 program.parse(process.argv)
