@@ -4,19 +4,18 @@ import axios from "redaxios"
 import { z } from "zod"
 import debug from "debug"
 import Conf from "conf"
-import { randomUUID } from "crypto"
-import { exec } from "child_process"
-import { promisify } from "util"
+import { randomUUID } from "node:crypto"
+import { exec } from "node:child_process"
+import { promisify } from "node:util"
 
 const execAsync = promisify(exec)
 
 const handleApiError = (error: any) => {
   console.error("API Error:")
-  console.log(error)
   if (error.data) {
     // The request was made and the server responded with a status code
     console.error(`Status: ${error.status}`)
-    console.error("Response data:", error.data)
+    console.log("Response data:", error.data)
   } else if (error.request) {
     // The request was made but no response was received
     console.error("No response received from server")
@@ -188,15 +187,17 @@ jobCommand
   .option("-n, --name <name>", "Job name", "untitled")
   .option("-p, --priority <priority>", "Job priority", "NORMAL")
   .action(async (opts: any) => {
-    const response = await axios.post(
-      `${API_BASE}/v1/jobs/enqueue`,
-      {
-        session_id: opts.sessionId ?? config.get("lastSessionId"),
-        name: opts.name,
-        priority: opts.priority,
-      },
-      { headers: getHeaders() },
-    )
+    const response = await axios
+      .post(
+        `${API_BASE}/v1/jobs/enqueue`,
+        {
+          session_id: opts.sessionId ?? config.get("lastSessionId"),
+          name: opts.name,
+          priority: opts.priority,
+        },
+        { headers: getHeaders() },
+      )
+      .catch((error) => handleApiError(error))
     config.set("lastJobId", response.data.id)
     console.log(response.data)
   })
