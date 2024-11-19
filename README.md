@@ -55,6 +55,18 @@ freerouting job start
 freerouting job output
 ```
 
+## Starting a Local Freerouting Server
+
+Want to run freerouting locally?
+
+```bash
+freerouting server start
+```
+
+This will pull the latest docker image, start a local server on port 37864,
+then configure your api url to `http://localhost:37864`. To reset your api url
+just do `freerouting config reset`
+
 ### Available Commands
 
 #### Session Management
