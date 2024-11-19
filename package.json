@@ -7,7 +7,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup-node ./cli.ts --format esm --sourcemap"
+    "build": "tsup-node ./cli.ts --format esm --sourcemap",
+    "format": "biome format --write .",
+    "format:check": "biome format ."
   },
   "bin": {
     "freerouting": "./dist/cli.js"
