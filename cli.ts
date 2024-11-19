@@ -94,9 +94,11 @@ sessionCommand
   .command("create")
   .description("Create a new routing session")
   .action(async () => {
-    const response = await axios.post(`${API_BASE}/v1/sessions/create`, "", {
-      headers: getHeaders(),
-    })
+    const response = await axios
+      .post(`${API_BASE}/v1/sessions/create`, "", {
+        headers: getHeaders(),
+      })
+      .catch((error) => handleApiError(error))
     config.set("lastSessionId", response.data.id)
     console.log(response.data)
   })
@@ -105,9 +107,11 @@ sessionCommand
   .command("list")
   .description("List all sessions")
   .action(async () => {
-    const response = await axios.get(`${API_BASE}/v1/sessions/list`, {
-      headers: getHeaders(),
-    })
+    const response = await axios
+      .get(`${API_BASE}/v1/sessions/list`, {
+        headers: getHeaders(),
+      })
+      .catch((error) => handleApiError(error))
     console.log(response.data)
   })
 
@@ -122,9 +126,11 @@ sessionCommand
       )
       return
     }
-    const response = await axios.get(`${API_BASE}/v1/sessions/${sessionId}`, {
-      headers: getHeaders(),
-    })
+    const response = await axios
+      .get(`${API_BASE}/v1/sessions/${sessionId}`, {
+        headers: getHeaders(),
+      })
+      .catch((error) => handleApiError(error))
     console.log(response.data)
   })
 
@@ -187,6 +193,11 @@ jobCommand
   .option("-n, --name <name>", "Job name", "untitled")
   .option("-p, --priority <priority>", "Job priority", "NORMAL")
   .action(async (opts: any) => {
+    console.log({
+      session_id: opts.sessionId ?? config.get("lastSessionId"),
+      name: opts.name,
+      priority: opts.priority,
+    })
     const response = await axios
       .post(
         `${API_BASE}/v1/jobs/enqueue`,
@@ -208,9 +219,11 @@ jobCommand
   .argument("<sessionId>", "Session ID")
   .action(async (sessionId: string) => {
     sessionId ??= config.get("lastSessionId")
-    const response = await axios.get(`${API_BASE}/v1/jobs/list/${sessionId}`, {
-      headers: getHeaders(),
-    })
+    const response = await axios
+      .get(`${API_BASE}/v1/jobs/list/${sessionId}`, {
+        headers: getHeaders(),
+      })
+      .catch((error) => handleApiError(error))
     console.log(response.data)
   })
 
@@ -220,9 +233,11 @@ jobCommand
   .argument("[jobId]", "Job ID")
   .action(async (jobId: string) => {
     jobId ??= config.get("lastJobId")
-    const response = await axios.get(`${API_BASE}/v1/jobs/${jobId}`, {
-      headers: getHeaders(),
-    })
+    const response = await axios
+      .get(`${API_BASE}/v1/jobs/${jobId}`, {
+        headers: getHeaders(),
+      })
+      .catch((error) => handleApiError(error))
     console.log(response.data)
   })
 
@@ -259,9 +274,11 @@ jobCommand
       console.error("No job ID provided and no last job ID found in config")
       return
     }
-    const response = await axios.put(`${API_BASE}/v1/jobs/${jobId}/start`, "", {
-      headers: getHeaders(),
-    })
+    const response = await axios
+      .put(`${API_BASE}/v1/jobs/${jobId}/start`, "", {
+        headers: getHeaders(),
+      })
+      .catch((error) => handleApiError(error))
     console.log(response.data)
   })
 
@@ -304,7 +321,9 @@ systemCommand
   .command("status")
   .description("Get system status")
   .action(async () => {
-    const response = await axios.get(`${API_BASE}/v1/system/status`)
+    const response = await axios
+      .get(`${API_BASE}/v1/system/status`)
+      .catch((error) => handleApiError(error))
     console.log(response.data)
   })
 
