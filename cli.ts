@@ -7,6 +7,7 @@ import Conf from "conf"
 import { randomUUID } from "node:crypto"
 import { exec } from "node:child_process"
 import { promisify } from "node:util"
+import { readFileSync } from "node:fs"
 
 const execAsync = promisify(exec)
 
@@ -181,6 +182,20 @@ configCommand
     console.log("Configuration reset to defaults")
   })
 
+configCommand
+  .command("print")
+  .description("Print current configuration")
+  .action(async () => {
+    console.log("Current configuration:")
+    console.log("  Profile ID:", config.get("profileId") || "(not set)")
+    console.log("  API Base URL:", config.get("apiBaseUrl"))
+    console.log(
+      "  Last Session ID:",
+      config.get("lastSessionId") || "(not set)",
+    )
+    console.log("  Last Job ID:", config.get("lastJobId") || "(not set)")
+  })
+
 // Job commands
 const jobCommand = new Command("job")
   .alias("jobs")
@@ -256,7 +271,7 @@ jobCommand
       console.error("No job ID provided and no last job ID found in config")
       return
     }
-    const fileData = await Bun.file(opts.file).text()
+    const fileData = readFileSync(opts.file)
     const response = await axios.post(
       `${API_BASE}/v1/jobs/${opts.jobId}/input`,
       {
