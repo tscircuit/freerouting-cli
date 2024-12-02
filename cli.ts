@@ -302,6 +302,29 @@ jobCommand
   })
 
 jobCommand
+  .command("logs")
+  .description("Get job logs")
+  .argument("[jobId]", "Job ID")
+  .option("-t, --timestamp <timestamp>", "Get logs from timestamp")
+  .action(async (jobId: string, opts: any) => {
+    jobId ??= config.get("lastJobId")
+    if (!jobId) {
+      console.error("No job ID provided and no last job ID found in config")
+      return
+    }
+    const endpoint = opts.timestamp
+      ? `${API_BASE}/v1/jobs/${jobId}/logs/${opts.timestamp}`
+      : `${API_BASE}/v1/jobs/${jobId}/logs`
+
+    const response = await axios
+      .get(endpoint, {
+        headers: getHeaders(),
+      })
+      .catch((error) => handleApiError(error))
+    console.log(response.data)
+  })
+
+jobCommand
   .command("output")
   .description("Get job output")
   .argument("[jobId]", "Job ID")

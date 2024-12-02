@@ -90,6 +90,8 @@ just do `freerouting config reset`
 - `job start [jobId]` - Start the routing process
 - `job output [jobId]` - Get the routed output
   - Optional: `-o, --output <file>` - Custom output file path
+- `job logs [jobId]` - Get job logs
+  - Optional: `-t, --timestamp <timestamp>` - Get logs from specific timestamp
 
 #### System Commands
 
