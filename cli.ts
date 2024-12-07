@@ -7,7 +7,7 @@ import Conf from "conf"
 import { randomUUID } from "node:crypto"
 import { exec } from "node:child_process"
 import { promisify } from "node:util"
-import { readFileSync } from "node:fs"
+import { readFileSync, writeFileSync } from "node:fs"
 
 const execAsync = promisify(exec)
 
@@ -344,7 +344,7 @@ jobCommand
       if (outputPath) {
         // Decode base64 and write to file
         const decodedData = Buffer.from(response.data.data, "base64").toString()
-        await Bun.write(outputPath, decodedData)
+        writeFileSync(outputPath, decodedData)
         console.log(`Output written to ${outputPath}`)
       } else {
         console.log(response.data)
