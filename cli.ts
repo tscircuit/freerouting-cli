@@ -340,6 +340,11 @@ jobCommand
         headers: getHeaders(),
       })
 
+      if (!response.data) {
+        console.log("<no response data>")
+        return
+      }
+
       const outputPath = opts.output || response.data.filename
       if (outputPath) {
         // Decode base64 and write to file
