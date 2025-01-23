@@ -95,7 +95,7 @@ export async function routeUsingLocalFreerouting({
     log("Job created with ID: %s", jobId)
 
     // Upload DSN file
-    log("Uploading design file: %s", inputPath)
+    log("Uploading DSN file: %s", inputPath)
     const fileData = readFileSync(inputPath)
     await axios.post(
       `${API_BASE}/v1/jobs/${jobId}/input`,
