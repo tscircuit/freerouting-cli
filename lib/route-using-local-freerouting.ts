@@ -2,6 +2,23 @@ import axios from "redaxios"
 import { readFileSync, existsSync } from "node:fs"
 import { exec } from "node:child_process"
 import { promisify } from "node:util"
+import debug from "debug"
+
+const log = debug("freerouting:route-using-local-freerouting")
+
+const handleApiError = (error: any) => {
+  console.error("API Error:")
+  if (error.data) {
+    console.error(`Status: ${error.status}`)
+    console.log("Response data:", error.data)
+  } else if (error.request) {
+    console.error("No response received from server")
+    console.error(error.request)
+  } else {
+    console.error("Error:", error.message)
+  }
+  throw error
+}
 
 const execAsync = promisify(exec)
 
@@ -10,7 +27,7 @@ interface RouteOptions {
   port?: number
 }
 
-export async function routeCircuit({
+export async function routeUsingLocalFreerouting({
   inputPath,
   port = 37864,
 }: RouteOptions): Promise<string> {
@@ -27,10 +44,12 @@ export async function routeCircuit({
 
   try {
     // Start container
+    log("Starting docker container")
     const { stdout } = await execAsync(
       `docker run -d -p ${port}:${port} ghcr.io/tscircuit/freerouting:master`,
     )
     containerId = stdout.trim()
+    log("Container started with ID: %s", containerId)
 
     // Wait for server to be ready and verify it's responding
     let serverReady = false
@@ -52,26 +71,31 @@ export async function routeCircuit({
     }
 
     // Create session
-    const sessionResponse = await axios.post(
-      `${API_BASE}/v1/sessions/create`,
-      "",
-      { headers },
-    )
+    log("Creating routing session")
+    const sessionResponse = await axios
+      .post(`${API_BASE}/v1/sessions/create`, "", { headers })
+      .catch(handleApiError)
     const sessionId = sessionResponse.data.id
+    log("Session created with ID: %s", sessionId)
 
     // Create job
-    const jobResponse = await axios.post(
-      `${API_BASE}/v1/jobs/enqueue`,
-      {
-        session_id: sessionId,
-        name: "circuit-routing",
-        priority: "NORMAL",
-      },
-      { headers },
-    )
+    log("Creating routing job")
+    const jobResponse = await axios
+      .post(
+        `${API_BASE}/v1/jobs/enqueue`,
+        {
+          session_id: sessionId,
+          name: "circuit-routing",
+          priority: "NORMAL",
+        },
+        { headers },
+      )
+      .catch(handleApiError)
     const jobId = jobResponse.data.id
+    log("Job created with ID: %s", jobId)
 
     // Upload DSN file
+    log("Uploading design file: %s", inputPath)
     const fileData = readFileSync(inputPath)
     await axios.post(
       `${API_BASE}/v1/jobs/${jobId}/input`,
@@ -83,6 +107,7 @@ export async function routeCircuit({
     )
 
     // Start job
+    log("Starting routing job...")
     await axios.put(`${API_BASE}/v1/jobs/${jobId}/start`, "", { headers })
 
     // Wait for completion
@@ -95,6 +120,7 @@ export async function routeCircuit({
         headers,
       })
 
+      log("Job status: %s", jobStatus.data?.state)
       if (jobStatus.data?.state === "COMPLETED") {
         isComplete = true
         break
@@ -121,7 +147,6 @@ export async function routeCircuit({
     if (!outputResponse.data?.data) {
       throw new Error("No output received from job")
     }
-
     return Buffer.from(outputResponse.data.data, "base64").toString()
   } finally {
     // Cleanup container
@@ -129,9 +154,10 @@ export async function routeCircuit({
       try {
         await execAsync(`docker stop ${containerId}`)
         await execAsync(`docker rm ${containerId}`)
-      } catch (error) {
-        // Silently handle cleanup errors
+      } catch (error: any) {
+        log("Error stopping/removing container: %s", error.message)
       }
     }
+    log("Docker container %s stopped and removed", containerId)
   }
 }

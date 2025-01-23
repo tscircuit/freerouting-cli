@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll } from "bun:test"
-import { routeCircuit } from "../lib/route-using-local-freerouting"
+import { routeUsingLocalFreerouting } from "../lib/route-using-local-freerouting"
 import { exec } from "node:child_process"
 import { promisify } from "node:util"
 
@@ -11,7 +11,7 @@ describe("freerouting router", () => {
 
     try {
       // Route the circuit
-      const routedDsn = await routeCircuit({ inputPath })
+      const routedDsn = await routeUsingLocalFreerouting({ inputPath })
       expect(routedDsn).toBeTruthy()
     } catch (error) {
       console.error("Routing error:", error)
@@ -25,7 +25,7 @@ describe("freerouting router", () => {
 
   test("should handle invalid input", async () => {
     await expect(
-      routeCircuit({
+      routeUsingLocalFreerouting({
         inputPath: "tests/tests-data/invalid-input.dsn",
       }),
     ).rejects.toThrow()

@@ -28,7 +28,7 @@
     "commander": "^12.1.0",
     "conf": "^13.0.1",
     "debug": "^4.3.7",
-    "dsn-converter": "^0.0.50",
+    "dsn-converter": "^0.0.57",
     "redaxios": "^0.5.1",
     "zod": "^3.23.8"
   }
