@@ -30,6 +30,36 @@ export class DockerManager {
     try {
       log("Starting docker container")
 
+      // Pull the image first
+      log("Pulling docker image")
+      await new Promise((resolve, reject) => {
+        this.docker.pull(
+          "ghcr.io/tscircuit/freerouting:master",
+          (pullError: any, stream: any) => {
+            if (pullError) {
+              log("Pull error:", pullError)
+              reject(pullError)
+              return
+            }
+
+            this.docker.modem.followProgress(
+              stream,
+              (err: any, output: any) => {
+                if (err) {
+                  log("Pull stream error:", err)
+                  reject(err)
+                  return
+                }
+                log("Pull completed")
+                resolve(output)
+              },
+            )
+          },
+        )
+      })
+
+      // Then create and start container
+      log("Creating container")
       await new Promise((resolve, reject) => {
         this.docker.createContainer(
           {

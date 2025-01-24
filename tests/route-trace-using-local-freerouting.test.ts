@@ -1,12 +1,10 @@
 import { test, expect } from "bun:test"
 import { routeUsingLocalFreerouting } from "../lib/route-using-local-freerouting"
 import {
-  mergeDsnSessionIntoDsnPcb,
   parseDsnToDsnJson,
   type DsnPcb,
   type DsnSession,
   convertDsnSessionToCircuitJson,
-  stringifyDsnJson,
 } from "dsn-converter"
 
 test("should route a simple circuit", async () => {
