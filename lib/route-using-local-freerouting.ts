@@ -40,6 +40,8 @@ export async function routeUsingLocalFreerouting({
   }
 
   try {
+    // Stop any existing container before starting a new one
+    await dockerManager.stopContainer()
     // Start container using DockerManager
     await dockerManager.startContainer()
 
@@ -140,8 +142,16 @@ export async function routeUsingLocalFreerouting({
       throw new Error("No output received from job")
     }
     return Buffer.from(outputResponse.data.data, "base64").toString()
+  } catch (error) {
+    // Re-throw the error after cleanup
+    throw error
   } finally {
-    // Cleanup container using DockerManager
-    await dockerManager.stopContainer()
+    // Always attempt to stop the container, even if an error occurred
+    try {
+      await dockerManager.stopContainer()
+    } catch (cleanupError) {
+      // Log cleanup errors but don't throw them
+      log("Error during container cleanup:", cleanupError)
+    }
   }
 }
