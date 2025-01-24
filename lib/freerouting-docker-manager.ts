@@ -3,7 +3,7 @@ import debug from "debug"
 
 const log = debug("freerouting:docker-manager")
 
-export class DockerManager {
+export class FreeroutingDockerManager {
   private docker: Docker
   private containerId: string | null = null
   private port: number

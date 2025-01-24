@@ -1,7 +1,7 @@
 import axios from "redaxios"
 import { readFileSync, existsSync } from "node:fs"
 import debug from "debug"
-import { DockerManager } from "./docker-manager"
+import { FreeroutingDockerManager } from "./freerouting-docker-manager"
 
 const log = debug("freerouting:route-using-local-freerouting")
 
@@ -32,7 +32,7 @@ export async function routeUsingLocalFreerouting({
     throw new Error(`Input file does not exist: ${inputPath}`)
   }
 
-  const dockerManager = new DockerManager(port)
+  const freeroutingDockerManager = new FreeroutingDockerManager(port)
   const API_BASE = `http://localhost:${port}`
   const headers = {
     "Freerouting-Profile-ID": "e9866fac-e7ae-4f9f-a616-24ec577aa461",
@@ -41,9 +41,9 @@ export async function routeUsingLocalFreerouting({
 
   try {
     // Stop any existing container before starting a new one
-    await dockerManager.stopContainer()
-    // Start container using DockerManager
-    await dockerManager.startContainer()
+    await freeroutingDockerManager.stopContainer()
+    // Start container using FreeroutingDockerManager
+    await freeroutingDockerManager.startContainer()
 
     // Wait for server to be ready and verify it's responding
     let serverReady = false
@@ -148,7 +148,7 @@ export async function routeUsingLocalFreerouting({
   } finally {
     // Always attempt to stop the container, even if an error occurred
     try {
-      await dockerManager.stopContainer()
+      await freeroutingDockerManager.stopContainer()
     } catch (cleanupError) {
       // Log cleanup errors but don't throw them
       log("Error during container cleanup:", cleanupError)
