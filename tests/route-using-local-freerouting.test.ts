@@ -7,7 +7,7 @@ const execAsync = promisify(exec)
 
 describe("freerouting router", () => {
   test("should complete a basic routing workflow", async () => {
-    const inputPath = "tests/tests-data/test-circuit.dsn"
+    const inputPath = "tests/assets/test-circuit.dsn"
 
     try {
       // Route the circuit

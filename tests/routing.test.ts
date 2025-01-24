@@ -16,10 +16,6 @@ let containerId: string
 
 describe("freerouting routing", () => {
   beforeAll(async () => {
-    if (!existsSync("tests/tests-data")) {
-      mkdirSync("tests/tests-data", { recursive: true })
-    }
-
     const { stdout } = await execAsync(
       "docker run -d -p 37864:37864 ghcr.io/tscircuit/freerouting:master",
     )
@@ -63,15 +59,15 @@ describe("freerouting routing", () => {
       expect(jobOutput).toContain("id:")
 
       const circuitJson = await Bun.file(
-        "tests/tests-data/circuit-json-with-route.json",
+        "tests/assets/circuit-json-with-route.json",
       ).json()
 
       const dsnString = convertCircuitJsonToDsnString(circuitJson)
 
-      await Bun.write("tests/tests-data/temp.dsn", dsnString)
+      await Bun.write("tests/assets/temp.dsn", dsnString)
 
       const { stdout: uploadOutput } = await execAsync(
-        "bun ./cli.ts job upload --file tests/tests-data/temp.dsn",
+        "bun ./cli.ts job upload --file tests/assets/temp.dsn",
       )
       expect(uploadOutput).toBeTruthy()
 
@@ -102,15 +98,15 @@ describe("freerouting routing", () => {
       }
 
       const { stdout: outputResult } = await execAsync(
-        "bun ./cli.ts job output -o tests/tests-data/routed-output.dsn",
+        "bun ./cli.ts job output -o tests/assets/routed-output.dsn",
       )
       expect(outputResult).toBeTruthy()
-      expect(existsSync("tests/tests-data/routed-output.dsn")).toBe(true)
+      expect(existsSync("tests/assets/routed-output.dsn")).toBe(true)
 
       const routedDsnContent = await Bun.file(
-        "tests/tests-data/routed-output.dsn",
+        "tests/assets/routed-output.dsn",
       ).text()
-      const routedDsnTemp = await Bun.file("tests/tests-data/temp.dsn").text()
+      const routedDsnTemp = await Bun.file("tests/assets/temp.dsn").text()
 
       const dsnJson = mergeDsnSessionIntoDsnPcb(
         parseDsnToDsnJson(routedDsnTemp) as DsnPcb,
@@ -122,9 +118,7 @@ describe("freerouting routing", () => {
 
       expect(traces).toBeGreaterThan(0)
 
-      await execAsync(
-        "rm tests/tests-data/temp.dsn tests/tests-data/routed-output.dsn",
-      )
+      await execAsync("rm tests/assets/temp.dsn tests/assets/routed-output.dsn")
     } catch (error) {
       console.error("Test error:", error)
       console.error("Full error details:", JSON.stringify(error, null, 2))

@@ -1,8 +1,7 @@
 import axios from "redaxios"
 import { readFileSync, existsSync } from "node:fs"
-import { exec } from "node:child_process"
-import { promisify } from "node:util"
 import debug from "debug"
+import { DockerManager } from "./docker-manager"
 
 const log = debug("freerouting:route-using-local-freerouting")
 
@@ -20,8 +19,6 @@ const handleApiError = (error: any) => {
   throw error
 }
 
-const execAsync = promisify(exec)
-
 interface RouteOptions {
   inputPath: string
   port?: number
@@ -35,7 +32,7 @@ export async function routeUsingLocalFreerouting({
     throw new Error(`Input file does not exist: ${inputPath}`)
   }
 
-  let containerId: string = ""
+  const dockerManager = new DockerManager(port)
   const API_BASE = `http://localhost:${port}`
   const headers = {
     "Freerouting-Profile-ID": "e9866fac-e7ae-4f9f-a616-24ec577aa461",
@@ -43,13 +40,8 @@ export async function routeUsingLocalFreerouting({
   }
 
   try {
-    // Start container
-    log("Starting docker container")
-    const { stdout } = await execAsync(
-      `docker run -d -p ${port}:${port} ghcr.io/tscircuit/freerouting:master`,
-    )
-    containerId = stdout.trim()
-    log("Container started with ID: %s", containerId)
+    // Start container using DockerManager
+    await dockerManager.startContainer()
 
     // Wait for server to be ready and verify it's responding
     let serverReady = false
@@ -149,15 +141,7 @@ export async function routeUsingLocalFreerouting({
     }
     return Buffer.from(outputResponse.data.data, "base64").toString()
   } finally {
-    // Cleanup container
-    if (containerId) {
-      try {
-        await execAsync(`docker stop ${containerId}`)
-        await execAsync(`docker rm ${containerId}`)
-      } catch (error: any) {
-        log("Error stopping/removing container: %s", error.message)
-      }
-    }
-    log("Docker container %s stopped and removed", containerId)
+    // Cleanup container using DockerManager
+    await dockerManager.stopContainer()
   }
 }

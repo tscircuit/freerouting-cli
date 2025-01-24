@@ -10,7 +10,7 @@ import {
 } from "dsn-converter"
 
 test("should route a simple circuit", async () => {
-  const inputPath = "tests/tests-data/test-circuit.dsn"
+  const inputPath = "tests/assets/test-circuit.dsn"
   try {
     // Route the circuit
     const routedDsn = await routeUsingLocalFreerouting({ inputPath })
