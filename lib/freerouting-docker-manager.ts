@@ -71,6 +71,7 @@ export class FreeroutingDockerManager {
               PortBindings: {
                 [`${this.port}/tcp`]: [{ HostPort: `${this.port}` }],
               },
+              AutoRemove: true,
             },
           },
           (err, container) => {
@@ -106,8 +107,7 @@ export class FreeroutingDockerManager {
 
     try {
       const container = this.docker.getContainer(this.containerId)
-      await container.stop()
-      await container.remove()
+      await container.kill()
       log("Docker container %s stopped and removed", this.containerId)
       this.containerId = null
     } catch (error) {
