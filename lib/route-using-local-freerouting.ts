@@ -40,8 +40,6 @@ export async function routeUsingLocalFreerouting({
   }
 
   try {
-    // Stop any existing container before starting a new one
-    await freeroutingDockerManager.stopContainer()
     // Start container using FreeroutingDockerManager
     await freeroutingDockerManager.startContainer()
 
