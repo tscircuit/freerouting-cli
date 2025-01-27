@@ -4,11 +4,10 @@
   "main": "./dist/cli.js",
   "version": "0.0.17",
   "files": [
-    "dist",
-    "lib"
+    "dist"
   ],
   "scripts": {
-    "build": "tsup-node ./cli.ts --format esm --sourcemap",
+    "build": "tsup-node ./cli.ts ./lib/route-using-local-freerouting.ts --format esm --sourcemap",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "test": "bun test"
