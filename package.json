@@ -4,7 +4,8 @@
   "main": "./dist/cli.js",
   "version": "0.0.17",
   "files": [
-    "dist"
+    "dist",
+    "lib"
   ],
   "scripts": {
     "build": "tsup-node ./cli.ts --format esm --sourcemap",
