@@ -2,13 +2,13 @@
   "name": "freerouting",
   "type": "module",
   "main": "./dist/lib/index.js",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "types": "./dist/lib/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
-   "build": "tsup-node ./cli.ts ./lib/index.ts --format esm --sourcemap --dts",
+    "build": "tsup-node ./cli.ts ./lib/index.ts --format esm --sourcemap --dts",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "test": "bun test"
