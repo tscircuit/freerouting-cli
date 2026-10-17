@@ -1,4 +1,11 @@
-import { describe, test, expect, beforeAll, afterAll } from "bun:test"
+import {
+  describe,
+  test,
+  expect,
+  beforeAll,
+  afterAll,
+  setDefaultTimeout,
+} from "bun:test"
 import { exec } from "node:child_process"
 import { promisify } from "node:util"
 import { mkdirSync, existsSync } from "node:fs"
@@ -10,6 +17,8 @@ import {
   type DsnSession,
   convertDsnPcbToCircuitJson,
 } from "dsn-converter"
+
+setDefaultTimeout(60000)
 
 const execAsync = promisify(exec)
 let containerId: string
@@ -40,7 +49,7 @@ describe("freerouting routing", () => {
       console.error("Server health check failed:", error)
       throw error
     }
-  }, 60000)
+  })
 
   afterAll(async () => {
     if (containerId) {
@@ -48,7 +57,7 @@ describe("freerouting routing", () => {
     }
 
     await execAsync("bun ./cli.ts config reset")
-  }, 30000)
+  })
 
   test("should route a simple circuit", async () => {
     try {

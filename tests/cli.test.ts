@@ -1,7 +1,15 @@
-// tests/cli.test.ts
-import { describe, test, expect, beforeAll, afterAll } from "bun:test"
+import {
+  describe,
+  test,
+  expect,
+  beforeAll,
+  afterAll,
+  setDefaultTimeout,
+} from "bun:test"
 import { exec } from "node:child_process"
 import { promisify } from "node:util"
+
+setDefaultTimeout(60000)
 
 const execAsync = promisify(exec)
 let containerId: string
@@ -25,7 +33,7 @@ describe("freerouting CLI", () => {
     await execAsync(
       "bun ./cli.ts config set-profile e9866fac-e7ae-4f9f-a616-24ec577aa461",
     )
-  }, 60000)
+  })
 
   afterAll(async () => {
     if (containerId) {
@@ -35,7 +43,7 @@ describe("freerouting CLI", () => {
 
     // Reset CLI config
     await execAsync("bun ./cli.ts config reset")
-  }, 30000)
+  })
 
   test("should show help", async () => {
     const { stdout } = await execAsync("bun ./cli.ts --help")
