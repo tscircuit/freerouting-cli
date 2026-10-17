@@ -1,1 +1,7 @@
-export { routeUsingLocalFreerouting } from "./route-using-local-freerouting"
+export {
+  routeUsingLocalFreerouting,
+  applyTraceThicknessToDsn,
+  normalizeTraceThicknessUm,
+  prepareDsnForRouting,
+  type RouteOptions,
+} from "./route-using-local-freerouting"
