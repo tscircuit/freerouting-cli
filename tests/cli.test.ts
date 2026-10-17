@@ -8,6 +8,9 @@ let containerId: string
 
 describe("freerouting CLI", () => {
   beforeAll(async () => {
+    await execAsync(
+      'docker rm -f $(docker ps -aq --filter "publish=37864") 2>/dev/null || true',
+    )
     // Start docker container
     const { stdout } = await execAsync(
       "docker run -d -p 37864:37864 ghcr.io/tscircuit/freerouting:master",
@@ -22,16 +25,17 @@ describe("freerouting CLI", () => {
     await execAsync(
       "bun ./cli.ts config set-profile e9866fac-e7ae-4f9f-a616-24ec577aa461",
     )
-  })
+  }, 60000)
 
   afterAll(async () => {
-    // Stop and remove container
-    await execAsync(`docker stop ${containerId}`)
-    await execAsync(`docker rm ${containerId}`)
+    if (containerId) {
+      // Stop and remove container
+      await execAsync(`docker rm -f ${containerId} 2>/dev/null || true`)
+    }
 
     // Reset CLI config
     await execAsync("bun ./cli.ts config reset")
-  })
+  }, 30000)
 
   test("should show help", async () => {
     const { stdout } = await execAsync("bun ./cli.ts --help")

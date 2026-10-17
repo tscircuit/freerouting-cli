@@ -16,6 +16,9 @@ let containerId: string
 
 describe("freerouting routing", () => {
   beforeAll(async () => {
+    await execAsync(
+      'docker rm -f $(docker ps -aq --filter "publish=37864") 2>/dev/null || true',
+    )
     const { stdout } = await execAsync(
       "docker run -d -p 37864:37864 ghcr.io/tscircuit/freerouting:master",
     )
@@ -37,14 +40,15 @@ describe("freerouting routing", () => {
       console.error("Server health check failed:", error)
       throw error
     }
-  })
+  }, 60000)
 
   afterAll(async () => {
-    await execAsync(`docker stop ${containerId}`)
-    await execAsync(`docker rm ${containerId}`)
+    if (containerId) {
+      await execAsync(`docker rm -f ${containerId} 2>/dev/null || true`)
+    }
 
     await execAsync("bun ./cli.ts config reset")
-  })
+  }, 30000)
 
   test("should route a simple circuit", async () => {
     try {
