@@ -58,6 +58,19 @@ export class FreeroutingDockerManager {
         )
       })
 
+      // Remove any existing container already bound to this.port
+      try {
+        const containers = await this.docker.listContainers({ all: true })
+        for (const c of containers) {
+          if (c.Ports?.some((p) => p.PublicPort === this.port)) {
+            const existing = this.docker.getContainer(c.Id)
+            await existing.remove({ force: true }).catch(() => {})
+          }
+        }
+      } catch (cleanupErr) {
+        log("Error checking existing containers:", cleanupErr)
+      }
+
       // Then create and start container
       log("Creating container")
       await new Promise((resolve, reject) => {
@@ -107,7 +120,7 @@ export class FreeroutingDockerManager {
 
     try {
       const container = this.docker.getContainer(this.containerId)
-      await container.kill()
+      await container.remove({ force: true })
       log("Docker container %s stopped and removed", this.containerId)
       this.containerId = null
     } catch (error) {

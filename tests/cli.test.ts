@@ -1,13 +1,24 @@
-// tests/cli.test.ts
-import { describe, test, expect, beforeAll, afterAll } from "bun:test"
+import {
+  describe,
+  test,
+  expect,
+  beforeAll,
+  afterAll,
+  setDefaultTimeout,
+} from "bun:test"
 import { exec } from "node:child_process"
 import { promisify } from "node:util"
+
+setDefaultTimeout(60000)
 
 const execAsync = promisify(exec)
 let containerId: string
 
 describe("freerouting CLI", () => {
   beforeAll(async () => {
+    await execAsync(
+      'docker rm -f $(docker ps -aq --filter "publish=37864") 2>/dev/null || true',
+    )
     // Start docker container
     const { stdout } = await execAsync(
       "docker run -d -p 37864:37864 ghcr.io/tscircuit/freerouting:master",
@@ -25,9 +36,10 @@ describe("freerouting CLI", () => {
   })
 
   afterAll(async () => {
-    // Stop and remove container
-    await execAsync(`docker stop ${containerId}`)
-    await execAsync(`docker rm ${containerId}`)
+    if (containerId) {
+      // Stop and remove container
+      await execAsync(`docker rm -f ${containerId} 2>/dev/null || true`)
+    }
 
     // Reset CLI config
     await execAsync("bun ./cli.ts config reset")

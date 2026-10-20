@@ -265,18 +265,32 @@ jobCommand
   .description("Upload design file for a job")
   .option("-j, --job-id <jobId>", "Job ID", config.get("lastJobId"))
   .requiredOption("-f, --file <file>", "Design file path")
+  .option(
+    "-w, --trace-thickness <thickness>",
+    "Trace thickness requirement in mm (or um if >= 10)",
+  )
   .action(async (opts: any) => {
     opts.jobId ??= config.get("lastJobId")
     if (!opts.jobId) {
       console.error("No job ID provided and no last job ID found in config")
       return
     }
-    const fileData = readFileSync(opts.file)
+    const { prepareDsnForRouting } = await import(
+      "./lib/route-using-local-freerouting"
+    )
+    const traceThickness =
+      opts.traceThickness !== undefined
+        ? Number(opts.traceThickness)
+        : undefined
+    const { filename, dsnString } = prepareDsnForRouting({
+      inputPath: opts.file,
+      traceThickness,
+    })
     const response = await axios.post(
       `${API_BASE}/v1/jobs/${opts.jobId}/input`,
       {
-        filename: opts.file,
-        data: Buffer.from(fileData).toString("base64"),
+        filename,
+        data: Buffer.from(dsnString, "utf-8").toString("base64"),
       },
       { headers: getHeaders() },
     )
